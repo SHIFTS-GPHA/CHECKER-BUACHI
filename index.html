@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ShiftCheck</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ===== SETUP SCREEN (first-time / edit) ===== -->
+  <div id="setup-screen" class="screen" hidden>
+    <div class="container">
+      <header class="setup-header">
+        <h1>Set Up Your Shift Schedule</h1>
+        <p class="subtitle">Enter your work rotation once and ShiftCheck will calculate your schedule for any date.</p>
+      </header>
+
+      <!-- Step 1: Shift definitions -->
+      <section class="card">
+        <h2>Your Shifts</h2>
+        <p class="hint">Define each working shift with optional start and end times.</p>
+        <div id="shifts-list"></div>
+        <button type="button" class="btn btn-secondary" id="add-shift-btn">+ Add Shift</button>
+        <p class="hint hint-block">After adding, removing, or renaming shifts, update the rotation builder and reference options below.</p>
+        <button type="button" class="btn btn-primary" id="apply-shifts-btn">Update rotation &amp; reference</button>
+        <p id="setup-info" class="info-msg" hidden></p>
+      </section>
+
+      <!-- Step 2: Rotation builder -->
+      <section class="card">
+        <h2>Rotation Builder</h2>
+        <p class="hint">Add steps in order. Each step is a shift or OFF days.</p>
+        <div id="rotation-list"></div>
+        <button type="button" class="btn btn-secondary" id="add-step-btn">+ Add Rotation Step</button>
+        <p class="rotation-info">Rotation length: <strong id="cycle-length">0</strong> days</p>
+        <div id="rotation-preview" class="rotation-preview"></div>
+      </section>
+
+      <!-- Step 3: Reference date -->
+      <section class="card">
+        <h2>Reference Date</h2>
+        <p class="hint">Pick a date you already know your schedule for.</p>
+        <label class="label" for="ref-date">What date do you know your shift for?</label>
+        <input type="date" id="ref-date" class="input" />
+        <label class="label label-spaced" for="ref-shift">What shift did you work on this date?</label>
+        <select id="ref-shift" class="input">
+          <option value="">-- Select shift --</option>
+        </select>
+        <div id="ref-position-wrap" class="ref-position-wrap" hidden>
+          <label class="label" for="ref-position">Which day in the rotation cycle?</label>
+          <select id="ref-position" class="input"></select>
+          <p class="hint">If this shift lasts multiple days, choose which day of the block that date was.</p>
+        </div>
+      </section>
+
+      <p id="setup-error" class="error-msg" hidden></p>
+
+      <div class="setup-actions">
+        <button type="button" class="btn btn-primary btn-large" id="save-schedule-btn">Save Schedule</button>
+        <button type="button" class="btn btn-secondary" id="cancel-setup-btn" hidden>Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard-screen" class="screen" hidden>
+    <div class="container">
+
+      <header class="app-header">
+        <h1>SHIFT CHECK</h1>
+        <div class="header-actions">
+          <button type="button" class="btn btn-secondary btn-small" id="edit-schedule-btn">Edit Schedule</button>
+          <button type="button" class="btn btn-danger btn-small" id="reset-schedule-btn">Reset Schedule</button>
+        </div>
+      </header>
+
+      <!-- Today -->
+      <section class="card card-today">
+        <div class="card-title-row">
+          <h2>TODAY</h2>
+          <button type="button" class="btn btn-secondary btn-small" id="today-btn">Today</button>
+        </div>
+        <div id="today-result"></div>
+      </section>
+
+      <!-- Date Lookup -->
+      <section class="card card-lookup">
+        <h2>Check Any Date</h2>
+        <div class="lookup-row">
+          <input type="date" id="lookup-date" class="input" />
+          <button type="button" class="btn btn-primary btn-large" id="check-date-btn">Check Schedule</button>
+        </div>
+        <div id="lookup-result" class="lookup-result"></div>
+      </section>
+
+      <!-- Calendar -->
+      <section class="card card-calendar">
+        <div class="calendar-header">
+          <button type="button" class="btn btn-secondary btn-small" id="prev-month-btn">&#8249; Prev</button>
+          <h2 id="calendar-month-label">August 2026</h2>
+          <button type="button" class="btn btn-secondary btn-small" id="next-month-btn">Next &#8250;</button>
+        </div>
+        <div class="calendar-weekdays">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span>
+          <span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+      </section>
+
+      <!-- Next shift info -->
+      <section class="card card-upcoming">
+        <div class="upcoming-grid">
+          <div class="upcoming-box">
+            <h3>NEXT WORKING DAY</h3>
+            <div id="next-work-result"></div>
+          </div>
+          <div class="upcoming-box">
+            <h3>NEXT DAY OFF</h3>
+            <div id="next-off-result"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Program planner -->
+      <section class="card card-programs">
+        <h2>Program Planner</h2>
+        <p class="hint">Add a program or event on any date to see if you will be working and which shift.</p>
+
+        <label class="label" for="program-name">Program name (optional)</label>
+        <input type="text" id="program-name" class="input" placeholder="e.g. Family wedding, Training course" maxlength="80" />
+
+        <label class="label label-spaced" for="program-date">Program date</label>
+        <input type="date" id="program-date" class="input" />
+
+        <div class="program-actions">
+          <button type="button" class="btn btn-primary btn-large" id="program-check-btn">Check my shift</button>
+          <button type="button" class="btn btn-secondary btn-large" id="program-save-btn">Save program</button>
+        </div>
+
+        <p id="program-error" class="error-msg" hidden></p>
+        <div id="program-result" class="program-result"></div>
+
+        <h3 class="program-list-title">Saved programs</h3>
+        <p class="hint" id="program-list-empty">No saved programs yet. Check a date and tap Save program to keep it here.</p>
+        <ul id="program-list" class="program-list"></ul>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Day detail modal -->
+  <div id="modal-overlay" class="modal-overlay" hidden>
+    <div class="modal">
+      <button type="button" class="modal-close" id="modal-close-btn" aria-label="Close">&times;</button>
+      <h3 id="modal-date-label"></h3>
+      <div id="modal-result"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
